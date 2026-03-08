@@ -1,0 +1,9 @@
+Select relevant tables for answering the question.
+
+Database Schema:
+{schema}
+
+Question:
+{question}
+
+Return table names separated by commas.

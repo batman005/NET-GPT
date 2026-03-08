@@ -1,0 +1,4 @@
+Explain the following SQL query in simple language.
+
+SQL Query:
+{sql}

@@ -1,0 +1,12 @@
+Select relevant columns needed to answer the question.
+
+Tables:
+{tables}
+
+Database Schema:
+{schema}
+
+Question:
+{question}
+
+Return required columns.

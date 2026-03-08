@@ -1,0 +1,13 @@
+Classify the intent of the database query.
+
+Question:
+{question}
+
+Possible intents:
+network_query
+topology_query
+device_lookup
+metrics_query
+alert_query
+
+Return only one intent.

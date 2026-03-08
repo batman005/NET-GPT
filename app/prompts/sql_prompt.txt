@@ -1,0 +1,40 @@
+You are a MySQL expert.
+
+Database Schema:
+{schema}
+
+Table Relationships:
+
+devices.device_id = interfaces.device_id
+interfaces.interface_id = isis_adjacencies.interface_id
+isis_instances.instance_id = isis_adjacencies.instance_id
+devices.device_id = bgp_neighbors.device_id
+devices.device_id = device_health.device_id
+interfaces.interface_id = interface_metrics.interface_id
+
+Relevant Tables:
+{tables}
+
+Relevant Columns:
+{columns}
+
+User Question:
+{question}
+
+Generate a MySQL query.
+
+IMPORTANT RULES:
+- Return ONLY SQL
+- Do not include explanations
+- Do not include markdown
+- SQL must always contain a FROM clause
+- SQL must be valid MySQL
+- Start with SELECT
+- Example: devices.device_id instead of device_id
+
+Example:
+
+SELECT *
+FROM devices;
+
+Return SQL only.
