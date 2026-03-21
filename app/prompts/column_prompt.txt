@@ -1,4 +1,4 @@
-Select relevant columns needed to answer the question.
+You are a database schema expert. Select ONLY the relevant columns needed to answer the question.
 
 Tables:
 {tables}
@@ -9,4 +9,14 @@ Database Schema:
 Question:
 {question}
 
-Return required columns.
+IMPORTANT RULES: 
+- Return ONLY column names that exist in the provided tables
+- Use format: table_name.column_name
+- Separate multiple columns with commas
+- Do NOT include explanations, SQL, or examples
+- Do NOT use markdown code blocks
+- Do NOT include columns that don't exist
+- Only return column names, nothing else
+
+Return columns only (example format):
+devices.hostname, devices.device_id, interfaces.interface_name

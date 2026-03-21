@@ -1,40 +1,43 @@
-You are a MySQL expert.
+You are an expert MySQL developer. Generate a SQL query based on the provided schema and relationships.
 
 Database Schema:
 {schema}
 
-Table Relationships:
+CRITICAL TABLE RELATIONSHIPS (use EXACTLY these for JOINs):
+1. devices → interfaces: devices.device_id = interfaces.device_id
+2. interfaces → isis_adjacencies: interfaces.interface_id = isis_adjacencies.interface_id
+3. isis_adjacencies → isis_instances: isis_instances.instance_id = isis_adjacencies.instance_id
+4. devices → bgp_neighbors: devices.device_id = bgp_neighbors.device_id
+5. devices → device_health: devices.device_id = device_health.device_id
+6. interfaces → interface_metrics: interfaces.interface_id = interface_metrics.interface_id
 
-devices.device_id = interfaces.device_id
-interfaces.interface_id = isis_adjacencies.interface_id
-isis_instances.instance_id = isis_adjacencies.instance_id
-devices.device_id = bgp_neighbors.device_id
-devices.device_id = device_health.device_id
-interfaces.interface_id = interface_metrics.interface_id
+⚠️ COMMON MISTAKES TO AVOID:
+- DO NOT use isis_adjacencies.device_id (it does NOT exist!)
+- DO NOT use interfaces.device_id directly in WHERE without joining devices
+- To reach devices from isis_adjacencies: MUST join through interfaces
+- Example: isis_adjacencies → interfaces → devices (3-table join required)
 
-Relevant Tables:
+Relevant Tables to Use:
 {tables}
 
-Relevant Columns:
+Relevant Columns Needed:
 {columns}
 
 User Question:
 {question}
 
-Generate a MySQL query.
+CRITICAL RULES:
+- Generate ONLY valid MySQL syntax
+- Use table aliases (d=devices, i=interfaces, ia=isis_adjacencies, ii=isis_instances)
+- Use CORRECT join paths - follow the relationships above EXACTLY
+- If joining isis_adjacencies to devices, MUST include interfaces table
+- Include WHERE clause if necessary
+- Always use qualified column names (table.column)
+- Do NOT use columns that don't exist
+- Return ONLY the SQL statement
+- No explanations, no markdown, no extra text
+- Must start with SELECT
+- Must end with semicolon
+- For "compare" or "multiple" questions, retrieve multiple rows (no single WHERE id = X)
 
-IMPORTANT RULES:
-- Return ONLY SQL
-- Do not include explanations
-- Do not include markdown
-- SQL must always contain a FROM clause
-- SQL must be valid MySQL
-- Start with SELECT
-- Example: devices.device_id instead of device_id
-
-Example:
-
-SELECT *
-FROM devices;
-
-Return SQL only.
+Return the SQL query only:

@@ -9,3 +9,8 @@ wheels/
 # Virtual environments
 .venv
 pyenv
+
+
+#env
+.env
+logs

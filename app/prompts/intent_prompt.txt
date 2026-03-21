@@ -1,13 +1,13 @@
-Classify the intent of the database query.
+Classify the intent of the database query. Return ONLY the intent name (no explanation).
 
 Question:
 {question}
 
 Possible intents:
-network_query
-topology_query
-device_lookup
-metrics_query
-alert_query
+- network_query: General network information requests
+- topology_query: Questions about network topology, adjacencies, connections, neighbors
+- device_lookup: Looking up specific device information
+- metrics_query: Performance, health, or metric-related questions
+- alert_query: Alert, issue, or problem-related questions
 
-Return only one intent.
+Return ONLY ONE intent name (lowercase).

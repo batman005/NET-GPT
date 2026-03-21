@@ -1,4 +1,4 @@
-Select relevant tables for answering the question.
+You are a database schema expert. Select ONLY the relevant tables needed to answer the question.
 
 Database Schema:
 {schema}
@@ -6,4 +6,23 @@ Database Schema:
 Question:
 {question}
 
-Return table names separated by commas.
+TABLE RELATIONSHIPS AND CONNECTIONS:
+- devices: Main device table (id: device_id)
+- interfaces: Network interfaces (belongs to devices via device_id, id: interface_id)
+- isis_adjacencies: ISIS neighbors (connected via interface_id, has instance_id)
+- isis_instances: ISIS process instances (id: instance_id)
+- bgp_neighbors: BGP peer information (belongs to devices via device_id)
+- device_health: Device health metrics (belongs to devices via device_id)
+- interface_metrics: Interface performance data (belongs to interfaces via interface_id)
+
+IMPORTANT RULES:
+- Return ONLY table names that exist in the database schema
+- Separate multiple tables with commas, NO spaces after commas
+- Do NOT include explanations or markdown
+- Do NOT include SQL syntax
+- Do NOT make up table names
+- For adjacency/neighbor questions, include: devices, interfaces, isis_adjacencies
+- For comparison questions, include relevant tables (all related records needed)
+
+Return table names only (example):
+devices, interfaces, isis_adjacencies
