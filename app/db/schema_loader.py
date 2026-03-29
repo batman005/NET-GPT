@@ -1,17 +1,21 @@
 import os
 import time
-import logging
 from typing import Dict, List
 from dotenv import load_dotenv
 from app.db.mysql_client import get_db_connection
 from app.utils.decorators import log_execution_time, cache_result, handle_errors
+from app.utils.logger import get_logger
 
 load_dotenv()
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="db")
 
 # Get cache TTL from environment
 _CACHE_TTL: int = int(os.getenv("SCHEMA_CACHE_TTL", "3600"))
+
+# Initialize cache variables
+_schema_cache: Dict[str, List[str]] = None
+_schema_cache_time: float = None
 
 
 @log_execution_time

@@ -1,13 +1,13 @@
 import os
-import logging
 from typing import Dict, Any
 from mysql.connector import pooling
 import mysql.connector
 from dotenv import load_dotenv
+from app.utils.logger import get_logger
 
 load_dotenv()
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="db")
 
 dbconfig = {
     "host": os.getenv("DB_HOST", "localhost"),

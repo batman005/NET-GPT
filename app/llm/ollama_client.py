@@ -1,11 +1,11 @@
 import os
-import logging
 from dotenv import load_dotenv
 from langchain_ollama import OllamaLLM
+from app.utils.logger import get_logger
 
 load_dotenv()
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="llm")
 
 
 def get_llm() -> OllamaLLM:

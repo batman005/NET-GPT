@@ -1,11 +1,11 @@
-import logging
 from typing import Dict, Any, Optional
 from fastapi import APIRouter, HTTPException, Header, Depends
 from app.services.interfaces import IPipelineService
 from app.dependencies import get_pipeline_service
 from app.schemas import QueryRequest, BatchQueryRequest, QueryResponse
+from app.utils.logger import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="query")
 router = APIRouter()
 
 

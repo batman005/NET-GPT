@@ -192,8 +192,8 @@ Net-GPT-Backend/
 │   ├── db.log
 │   ├── error.log
 │   └── performance.log
-├── LOGGING.md               # Logging documentation
-├── RAG_INTEGRATION_GUIDE.md # RAG implementation guide
+|            
+|
 ├── requirements.txt
 ├── .env
 ├── .env.example

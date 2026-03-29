@@ -3,7 +3,6 @@ Concrete implementation of pipeline service.
 Implements IPipelineService for query execution.
 Enhanced with RAG (Retrieval-Augmented Generation) for better accuracy.
 """
-import logging
 import asyncio
 from typing import Dict, Any
 from concurrent.futures import ThreadPoolExecutor
@@ -19,8 +18,9 @@ from app.utils.schema_formatter import format_schema
 from app.utils.sql_extractor import extract_sql
 from app.utils.decorators import log_execution_time_async, handle_errors_async
 from app.rag.rag_service import get_rag_service
+from app.utils.logger import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="pipeline")
 _executor = ThreadPoolExecutor(max_workers=10)
 
 VALID_INTENTS = ["network_query", "topology_query", "device_lookup", "metrics_query", "alert_query"]

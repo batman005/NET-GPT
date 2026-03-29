@@ -1,11 +1,11 @@
-import logging
 from tenacity import retry, stop_after_attempt, wait_exponential
 from app.llm.ollama_client import get_llm
 from app.utils.prompt_loader import load_prompt
 from app.utils.decorators import log_function_call
 from app.rag.rag_service import get_rag_service
+from app.utils.logger import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="agents")
 llm = get_llm()
 
 

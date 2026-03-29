@@ -77,6 +77,9 @@ def get_logger(name: str, component: Optional[str] = None) -> logging.Logger:
         logger.handlers = []
         logger.propagate = False
         
+        # Set logger level to DEBUG so messages aren't filtered before reaching handler
+        logger.setLevel(logging.DEBUG)
+        
         # Add component-specific handler
         log_file = LOGS_DIR / COMPONENT_LOGS[component]
         handler = logging.handlers.RotatingFileHandler(

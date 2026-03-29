@@ -11,29 +11,32 @@ CRITICAL TABLE RELATIONSHIPS (use EXACTLY these for JOINs):
 5. devices → device_health: devices.device_id = device_health.device_id
 6. interfaces → interface_metrics: interfaces.interface_id = interface_metrics.interface_id
 
+CRITICAL: These columns are the ONLY ONES that exist and must be used:
+{columns}
+
 ⚠️ COMMON MISTAKES TO AVOID:
+- DO NOT use columns other than those listed above
 - DO NOT use isis_adjacencies.device_id (it does NOT exist!)
 - DO NOT use interfaces.device_id directly in WHERE without joining devices
+- DO NOT use interfaces.neighbor_ip (it does NOT exist! Use isis_adjacencies.neighbor_ip instead)
 - To reach devices from isis_adjacencies: MUST join through interfaces
 - Example: isis_adjacencies → interfaces → devices (3-table join required)
 
 Relevant Tables to Use:
 {tables}
 
-Relevant Columns Needed:
-{columns}
-
 User Question:
 {question}
 
 CRITICAL RULES:
 - Generate ONLY valid MySQL syntax
+- Use ONLY the columns specified above - nothing else
 - Use table aliases (d=devices, i=interfaces, ia=isis_adjacencies, ii=isis_instances)
 - Use CORRECT join paths - follow the relationships above EXACTLY
 - If joining isis_adjacencies to devices, MUST include interfaces table
 - Include WHERE clause if necessary
 - Always use qualified column names (table.column)
-- Do NOT use columns that don't exist
+- Do NOT use columns that don't exist in the schema
 - Return ONLY the SQL statement
 - No explanations, no markdown, no extra text
 - Must start with SELECT

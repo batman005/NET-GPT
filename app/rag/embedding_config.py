@@ -5,8 +5,9 @@ Uses OllamaEmbeddings with nomic-embed-text model.
 
 import logging
 from langchain_ollama import OllamaEmbeddings
+from app.utils.logger import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="rag")
 
 
 class EmbeddingConfig:

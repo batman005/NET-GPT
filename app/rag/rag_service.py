@@ -6,8 +6,9 @@ Provides semantic retrieval of tables, joins, and examples.
 import logging
 from typing import Dict, List, Any, Set
 from app.rag.faiss_retriever import get_faiss_retriever, FAISSRetriever
+from app.utils.logger import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="rag")
 
 
 class RAGService:

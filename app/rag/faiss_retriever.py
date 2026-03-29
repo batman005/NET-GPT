@@ -9,8 +9,9 @@ from langchain_core.documents import Document
 from langchain_community.vectorstores import FAISS
 from app.rag.embedding_config import get_embeddings
 from app.rag.schema_config import NETWORK_DB_SCHEMA
+from app.utils.logger import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="rag")
 
 
 class FAISSRetriever:
