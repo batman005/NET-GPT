@@ -1,4 +1,4 @@
-# Net-GPT: NLP to SQL Query Engine
+# Net-GPT: AI-Powered NLP-to-SQL Engine for Network Data Analytics using LLMs and RAG
 
 Transform natural language questions into optimized SQL queries for network device data.
 
