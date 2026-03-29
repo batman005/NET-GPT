@@ -430,4 +430,6 @@ For debugging:
 
 ---
 
-
+## Remaining (WIP)
+1. Frontend for the application.
+2. Implementing Caching Mechanism for embedding
