@@ -3,6 +3,7 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 from app.llm.ollama_client import get_llm
 from app.utils.prompt_loader import load_prompt
 from app.utils.decorators import log_function_call
+from app.rag.rag_service import get_rag_service
 
 logger = logging.getLogger(__name__)
 llm = get_llm()
@@ -12,7 +13,7 @@ llm = get_llm()
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
 def select_tables(question: str, schema: str) -> str:
     """
-    Select relevant tables for answering the question.
+    Select relevant tables for answering the question using RAG enhancement.
     
     Args:
         question: User's natural language question
@@ -33,11 +34,43 @@ def select_tables(question: str, schema: str) -> str:
     logger.debug(f"Selecting tables for: {question[:50]}...")
     
     try:
+        # ===== RAG Enhancement: Retrieve relevant context =====
+        rag_service = get_rag_service()
+        rag_context = rag_service.retrieve_context_for_query(question)
+        
+        logger.info(f"RAG Retrieved: {len(rag_context.get('tables', []))} tables, "
+                   f"{len(rag_context.get('join_patterns', []))} join patterns, "
+                   f"{len(rag_context.get('example_queries', []))} examples")
+        
+        # ===== Load base prompt template =====
         prompt_template = load_prompt("table_prompt.txt")
+        
+        # ===== Build enhanced prompt with RAG context =====
+        # Add RAG context to the prompt
+        rag_tables_hint = ""
+        if rag_context.get('tables'):
+            rag_tables_hint = f"\n\nBased on semantic analysis, these tables appear relevant:\n"
+            rag_tables_hint += ", ".join(rag_context['tables'])
+        
+        rag_joins_hint = ""
+        if rag_context.get('join_patterns'):
+            rag_joins_hint = f"\n\nCommon join patterns that might be useful:\n"
+            for i, join in enumerate(rag_context['join_patterns'][:2], 1):
+                # Extract join name
+                lines = join.split("\n")
+                join_name = next((l.replace("Join Pattern:", "").strip() 
+                                for l in lines if "Join Pattern:" in l), f"Join {i}")
+                rag_joins_hint += f"  - {join_name}\n"
+        
+        # Combine original schema with RAG enhancements
+        enhanced_schema = schema + rag_tables_hint + rag_joins_hint
+        
         prompt = prompt_template.format(
             question=question,
-            schema=schema
+            schema=enhanced_schema
         )
+        
+        logger.debug(f"Enhanced prompt length: {len(prompt)} chars")
         
         response = llm.invoke(prompt)
         tables = response.strip()

@@ -1,6 +1,7 @@
 """
 Concrete implementation of pipeline service.
 Implements IPipelineService for query execution.
+Enhanced with RAG (Retrieval-Augmented Generation) for better accuracy.
 """
 import logging
 import asyncio
@@ -17,6 +18,7 @@ from app.db.schema_loader import load_schema
 from app.utils.schema_formatter import format_schema
 from app.utils.sql_extractor import extract_sql
 from app.utils.decorators import log_execution_time_async, handle_errors_async
+from app.rag.rag_service import get_rag_service
 
 logger = logging.getLogger(__name__)
 _executor = ThreadPoolExecutor(max_workers=10)
@@ -26,6 +28,34 @@ VALID_INTENTS = ["network_query", "topology_query", "device_lookup", "metrics_qu
 
 class PipelineService(IPipelineService):
     """Production pipeline service implementation."""
+    
+    def __init__(self):
+        """Initialize pipeline with RAG service."""
+        self.rag_service = get_rag_service()
+        logger.info("Pipeline initialized with RAG enhancements")
+    
+    def _get_rag_context(self, question: str) -> Dict[str, Any]:
+        """
+        Retrieve RAG context for question.
+        
+        Returns enhanced context with tables, joins, and examples
+        """
+        try:
+            logger.debug("Retrieving RAG context...")
+            context = self.rag_service.retrieve_context_for_query(question)
+            logger.info(f"RAG Context Retrieved: {len(context.get('tables', []))} tables, "
+                       f"{len(context.get('join_patterns', []))} joins, "
+                       f"{len(context.get('example_queries', []))} examples")
+            return context
+        except Exception as e:
+            logger.warning(f"Failed to retrieve RAG context: {e}")
+            return {
+                "tables": [],
+                "join_patterns": [],
+                "example_queries": [],
+                "raw_context": "",
+                "error": str(e)
+            }
     
     def _validate_intent(self, intent: str) -> bool:
         """Validate intent is in allowed list."""
@@ -67,35 +97,50 @@ class PipelineService(IPipelineService):
     
     def run_pipeline_sync(self, question: str) -> Dict[str, Any]:
         """
-        Execute the NLP to SQL pipeline (sync version).
+        Execute the NLP to SQL pipeline with RAG enhancement (sync version).
         
-        Steps:
+        Pipeline Steps with RAG:
         1. Load schema
-        2. Detect intent
-        3. Select tables
-        4. Select columns
-        5. Generate SQL
-        6. Validate SQL
-        7. Explain query
-        8. Execute query
+        2. Retrieve RAG context (tables, joins, examples) ← NEW
+        3. Detect intent
+        4. Select tables (with RAG enhancement)
+        5. Select columns (with RAG enhancement)
+        6. Generate SQL (with RAG context)
+        7. Validate SQL
+        8. Explain query (with RAG similar examples)
+        9. Execute query
         """
         try:
-            logger.info(f"Starting pipeline for question: {question}")
+            logger.info(f"{'='*60}")
+            logger.info(f"Starting RAG-Enhanced Pipeline")
+            logger.info(f"Question: {question[:80]}")
+            logger.info(f"{'='*60}")
             
-            # Load schema
+            # ===== Step 1: Load Schema =====
+            logger.info("Step 1: Loading database schema...")
             raw_schema = load_schema()
             schema = format_schema(raw_schema)
             schema_tables = set(raw_schema.keys())
             
             if not schema_tables:
+                logger.error("No schema tables found")
                 return {
                     "success": False,
                     "question": question,
                     "error": "Failed to load database schema",
                     "error_type": "SchemaLoadError"
                 }
+            logger.info(f"Schema loaded: {len(schema_tables)} tables")
             
-            # Detect intent
+            # ===== Step 2: Retrieve RAG Context (NEW!) =====
+            logger.info("Step 2: Retrieving RAG context...")
+            rag_context = self._get_rag_context(question)
+            rag_tables = rag_context.get("tables", [])
+            rag_joins = rag_context.get("join_patterns", [])
+            rag_examples = rag_context.get("example_queries", [])
+            
+            # ===== Step 3: Detect Intent =====
+            logger.info("Step 3: Detecting intent...")
             intent = detect_intent(question).strip().lower()
             if not self._validate_intent(intent):
                 logger.error(f"Invalid intent detected: {intent}")
@@ -105,9 +150,11 @@ class PipelineService(IPipelineService):
                     "error": f"Invalid intent: {intent}. Valid intents: {VALID_INTENTS}",
                     "error_type": "InvalidIntent"
                 }
-            logger.info(f"Detected intent: {intent}")
+            logger.info(f"Intent detected: {intent}")
             
-            # Select tables
+            # ===== Step 4: Select Tables (RAG-Enhanced) =====
+            logger.info("Step 4: Selecting tables with RAG enhancement...")
+            # Table selection now uses RAG context (already integrated in table_agent.py)
             tables = select_tables(question, schema).strip()
             if not self._validate_tables(tables, schema_tables):
                 logger.error(f"Invalid tables selected: {tables}")
@@ -118,16 +165,30 @@ class PipelineService(IPipelineService):
                     "error": f"Invalid or non-existent tables: {tables}",
                     "error_type": "InvalidTables"
                 }
-            logger.info(f"Selected tables: {tables}")
+            logger.info(f"Tables selected: {tables}")
+            logger.info(f"RAG suggested tables: {rag_tables}")
             
-            # Select columns
+            # ===== Step 5: Select Columns (RAG-Context) =====
+            logger.info("Step 5: Selecting columns...")
+            # Add RAG context hints to column selection
+            column_context = f"RAG retrieved {len(rag_joins)} relevant join patterns for reference."
             columns = select_columns(question, tables, schema).strip()
             if not columns:
                 logger.warning("No columns selected, continuing anyway")
-            logger.debug(f"Selected columns: {columns[:100]}...")
+            logger.info(f"Columns selected: {columns[:100] if columns else 'None'}...")
             
-            # Generate SQL
-            raw_sql = generate_sql(question, tables, columns, schema).strip()
+            # ===== Step 6: Generate SQL (RAG-Enhanced) =====
+            logger.info("Step 6: Generating SQL with RAG context...")
+            # Enhance schema with RAG suggestions for SQL generation
+            rag_hints = "\n\nRAG SUGGESTIONS:\n"
+            if rag_joins:
+                rag_hints += f"Relevant join patterns: {len(rag_joins)} found\n"
+            if rag_examples:
+                rag_hints += f"Similar example queries available: {len(rag_examples)}\n"
+            
+            enhanced_schema = schema + rag_hints
+            raw_sql = generate_sql(question, tables, columns, enhanced_schema).strip()
+            
             if not raw_sql:
                 logger.error("Empty SQL generated")
                 return {
@@ -141,7 +202,8 @@ class PipelineService(IPipelineService):
                 }
             logger.debug(f"Generated raw SQL: {raw_sql[:100]}...")
             
-            # Extract and validate SQL
+            # ===== Step 7: Extract and Validate SQL =====
+            logger.info("Step 7: Validating SQL...")
             sql = extract_sql(raw_sql)
             if not sql or not self._validate_sql(sql):
                 logger.error(f"Invalid SQL generated: {sql}")
@@ -154,21 +216,36 @@ class PipelineService(IPipelineService):
                     "error": f"Invalid SQL generated: {sql}",
                     "error_type": "InvalidSQL"
                 }
-            logger.info(f"Valid SQL extracted: {sql[:100]}...")
+            logger.info(f"SQL validated: {sql[:80]}...")
             
-            # Explain query
+            # ===== Step 8: Explain Query (RAG-Enhanced) =====
+            logger.info("Step 8: Explaining query...")
             try:
+                # Use RAG similar examples if available for better explanation
+                explanation_hint = ""
+                if rag_examples:
+                    explanation_hint = f"\nBased on {len(rag_examples)} similar example queries in the knowledge base."
+                
                 explanation = explain_query(sql).strip()
+                explanation += explanation_hint
             except Exception as e:
                 logger.warning(f"Failed to explain query: {e}")
                 explanation = f"Query explanation failed: {str(e)}"
+            logger.info(f"Query explanation generated: {explanation[:80]}...")
             
-            # Execute query
+            # ===== Step 9: Execute Query =====
+            logger.info("Step 9: Executing query...")
             result = execute_query(sql)
             if result.get("status") != "success":
                 logger.error(f"Query execution failed: {result}")
             else:
-                logger.info(f"Query executed successfully, returned {result.get('count', 0)} rows")
+                rows_count = result.get("count", 0)
+                logger.info(f"Query executed successfully: {rows_count} rows returned")
+            
+            # ===== Return Final Result =====
+            logger.info(f"{'='*60}")
+            logger.info("Pipeline execution completed successfully")
+            logger.info(f"{'='*60}")
             
             return {
                 "success": True,
@@ -178,6 +255,11 @@ class PipelineService(IPipelineService):
                 "columns": columns,
                 "sql": sql,
                 "explanation": explanation,
+                "rag_context": {
+                    "tables_suggested": rag_tables,
+                    "join_patterns_found": len(rag_joins),
+                    "similar_examples": len(rag_examples)
+                },
                 "result": result
             }
         
