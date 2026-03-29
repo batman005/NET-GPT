@@ -10,21 +10,25 @@ llm = get_llm()
 
 @log_function_call(log_args=False, log_result=False)
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
-def explain_query(sql: str) -> str:
+def explain_query(sql: str, max_length: int = 500) -> str:
     """
-    Generate a human-readable explanation of a SQL query.
+    Generate a concise explanation of a SQL query.
     
     Args:
         sql: SQL query to explain
+        max_length: Maximum length of explanation in characters (default: 500)
         
     Returns:
-        Natural language explanation of the query
+        Concise natural language explanation of the query (2-3 sentences max)
         
     Raises:
         ValueError: If explanation generation fails
     """
     if not sql or not isinstance(sql, str):
         raise ValueError("SQL must be a non-empty string")
+    
+    if max_length < 100:
+        max_length = 100
     
     logger.debug(f"Explaining query: {sql[:50]}...")
     
@@ -38,6 +42,11 @@ def explain_query(sql: str) -> str:
         if not explanation:
             logger.warning("Empty explanation generated")
             return "No explanation available"
+        
+        # Truncate if too long (keep it to-the-point)
+        if len(explanation) > max_length:
+            explanation = explanation[:max_length].rsplit(" ", 1)[0] + "..."
+            logger.debug(f"Explanation truncated to {len(explanation)} chars")
         
         logger.debug(f"Generated explanation: {explanation[:100]}...")
         return explanation

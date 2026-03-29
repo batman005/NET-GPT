@@ -13,6 +13,11 @@ Transform natural language questions into optimized SQL queries for network devi
 - Performance Monitoring - Track query execution times
 - Error Tracking - Comprehensive error logs
 
+
+## DEMO Video
+
+
+
 ## Architecture
 
 Query Processing Pipeline (9 Steps):

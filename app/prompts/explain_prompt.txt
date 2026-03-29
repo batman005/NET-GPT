@@ -1,4 +1,13 @@
-Explain the following SQL query in simple language.
+Explain the following SQL query in 2-3 sentences maximum. Be concise and to-the-point.
 
 SQL Query:
 {sql}
+
+IMPORTANT RULES:
+- Keep explanation brief (max 3 sentences)
+- Use simple language
+- Focus on what the query does, not step-by-step breakdown
+- No detailed clause-by-clause explanation
+- Example format: "This query retrieves devices located in Delhi by joining the devices and locations tables."
+
+Explanation:

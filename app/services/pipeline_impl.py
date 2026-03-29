@@ -4,21 +4,27 @@ Implements IPipelineService for query execution.
 Enhanced with RAG (Retrieval-Augmented Generation) for better accuracy.
 """
 import asyncio
-from typing import Dict, Any
 from concurrent.futures import ThreadPoolExecutor
-from app.services.interfaces import IPipelineService
-from app.agents.intent_agent import detect_intent
-from app.agents.table_agent import select_tables
-from app.agents.column_agent import select_columns
-from app.agents.sql_agent import generate_sql
-from app.agents.explain_agent import explain_query
-from app.db.mysql_client import execute_query
-from app.db.schema_loader import load_schema
-from app.utils.schema_formatter import format_schema
-from app.utils.sql_extractor import extract_sql
-from app.utils.decorators import log_execution_time_async, handle_errors_async
+from typing import Any, Dict
+
+from app.agents import (
+    detect_intent,
+    explain_query,
+    generate_sql,
+    select_columns,
+    select_tables,
+)
+from app.db import execute_query, load_schema
 from app.rag.rag_service import get_rag_service
-from app.utils.logger import get_logger
+from app.services.interfaces import IPipelineService
+from app.utils import (
+    extract_sql,
+    format_schema,
+    generate_request_id,
+    get_logger,
+    handle_errors_async,
+    log_execution_time_async,
+)
 
 logger = get_logger(__name__, component="pipeline")
 _executor = ThreadPoolExecutor(max_workers=10)
@@ -278,8 +284,9 @@ class PipelineService(IPipelineService):
         """Execute query asynchronously (non-blocking)."""
         loop = asyncio.get_event_loop()
         result = await loop.run_in_executor(_executor, self.run_pipeline_sync, question)
+        result["request_id"] = generate_request_id()
         result["user_id"] = user_id
-        logger.info(f"[{user_id}] Query completed: {question[:50]}...")
+        logger.info(f"[{user_id}] Query completed: {question[:50]}... (Request ID: {result['request_id']})")
         return result
     
     @log_execution_time_async
