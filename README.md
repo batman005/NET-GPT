@@ -15,6 +15,8 @@ Transform natural language questions into optimized SQL queries for network devi
 
 
 ## DEMO Video
+[Screencast from 29-03-26 06:36:34 PM IST.webm](https://github.com/user-attachments/assets/6902f48f-232e-4fc7-97b0-849de375e4a6)
+
 
 
 
@@ -104,9 +106,14 @@ API available at:
 ### Single Query
 
 ```bash
-curl -X POST "http://localhost:8000/query" \
-  -H "Content-Type: application/json" \
-  -d '{"question": "Show me all critical alerts"}'
+curl -X 'POST' \
+  'http://127.0.0.1:8000/query' \
+  -H 'accept: application/json' \
+  -H 'x-user-id: Hrithik' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "question": "List all down interfaces grouped by device and location in Ukraine and Congo Country and neighbours ip"
+}'
 ```
 
 ### Batch Queries
@@ -128,22 +135,39 @@ curl -X POST "http://localhost:8000/query/batch" \
 ```json
 {
   "success": true,
-  "question": "Show me all critical alerts",
-  "intent": "alert_query",
-  "tables": "alerts, devices",
-  "columns": "alert_id, severity, device_name",
-  "sql": "SELECT * FROM alerts JOIN devices WHERE severity='critical'",
-  "explanation": "This query retrieves all critical alerts with device information",
-  "rag_context": {
-    "tables_suggested": ["alerts", "devices"],
-    "join_patterns_found": 1,
-    "similar_examples": 2
-  },
+  "question": "List all down interfaces grouped by device and location in Ukraine and Congo Country and neighbours ip",
+  "intent": "topology_query",
+  "tables": "devices, interfaces, isis_adjacencies, isis_instances, locations, bgp_neighbors",
+  "columns": "devices.hostname, devices.device_id, interfaces.interface_name, interfaces.status, locations.country, bgp_neighbors.neighbor_ip",
+  "sql": "SELECT \n    d.device_id, \n    d.hostname, \n    d.location_id, \n    l.country, \n    i.interface_name, \n    i.status, \n    ia.neighbor_ip\nFROM \n    devices d\nJOIN \n    interfaces i ON d.device_id = i.device_id\nJOIN \n    isis_adjacencies ia ON i.interface_id = ia.interface_id\nJOIN \n    isis_instances ii ON ia.instance_id = ii.instance_id\nJOIN \n    locations l ON d.location_id = l.location_id\nWHERE \n    (l.country = 'Ukraine' OR l.country = 'Congo') \n    AND i.status = 'down';",
+  "explanation": "This query fetches details of network devices in Ukraine or Congo with down interfaces by joining multiple tables that link devices to their locations and interface statuses.\nBased on 1 similar example queries in the knowledge base.",
   "result": {
     "status": "success",
-    "count": 5,
-    "data": [...]
-  }
+    "data": [
+      {
+        "device_id": 31,
+        "hostname": "router-port jacob-29",
+        "location_id": 3,
+        "country": "Congo",
+        "interface_name": "Gig0/3",
+        "status": "DOWN",
+        "neighbor_ip": "26.62.225.193"
+      },
+      {
+        "device_id": 42,
+        "hostname": "router-new emilyhaven-40",
+        "location_id": 4,
+        "country": "Ukraine",
+        "interface_name": "Gig0/2",
+        "status": "DOWN",
+        "neighbor_ip": "65.66.167.54"
+      },
+    ],
+    "count": 2
+  },
+  "error": null,
+  "request_id": "REQ-20260329-44GPNU",
+  "user_id": "Hrithik"
 }
 ```
 
