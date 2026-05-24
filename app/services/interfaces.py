@@ -3,7 +3,7 @@ Abstract interfaces.
 Defines contracts that implementations must folloW.
 """
 from abc import ABC, abstractmethod
-from typing import Dict, Any
+from typing import AsyncIterator, Dict, Any
 
 
 class IPipelineService(ABC):
@@ -17,6 +17,11 @@ class IPipelineService(ABC):
     @abstractmethod
     async def execute_batch(self, questions: list, user_id: str = "anonymous") -> list:
         """Execute multiple queries concurrently."""
+        pass
+
+    @abstractmethod
+    async def execute_stream(self, question: str, user_id: str = "anonymous") -> AsyncIterator[Dict[str, Any]]:
+        """Execute a single query and stream progress events."""
         pass
 
 

@@ -1,3 +1,5 @@
+from typing import Optional, Dict, Any
+
 from tenacity import retry, stop_after_attempt, wait_exponential
 from app.llm.ollama_client import get_llm
 from app.utils.prompt_loader import load_prompt
@@ -11,7 +13,7 @@ llm = get_llm()
 
 @log_function_call(log_args=True, log_result=False)
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
-def select_tables(question: str, schema: str) -> str:
+def select_tables(question: str, schema: str, rag_context: Optional[Dict[str, Any]] = None) -> str:
     """
     Select relevant tables for answering the question using RAG enhancement.
     
@@ -34,9 +36,10 @@ def select_tables(question: str, schema: str) -> str:
     logger.debug(f"Selecting tables for: {question[:50]}...")
     
     try:
-        # ===== RAG Enhancement: Retrieve relevant context =====
-        rag_service = get_rag_service()
-        rag_context = rag_service.retrieve_context_for_query(question)
+        # ===== RAG Enhancement: Reuse pipeline context when available =====
+        if rag_context is None:
+            rag_service = get_rag_service()
+            rag_context = rag_service.retrieve_context_for_query(question)
         
         logger.info(f"RAG Retrieved: {len(rag_context.get('tables', []))} tables, "
                    f"{len(rag_context.get('join_patterns', []))} join patterns, "
