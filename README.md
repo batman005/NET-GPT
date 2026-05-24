@@ -15,7 +15,9 @@ Transform natural language questions into optimized SQL queries for network devi
 
 
 ## DEMO Video
-[Screencast from 29-03-26 06:36:34 PM IST.webm](https://github.com/user-attachments/assets/6902f48f-232e-4fc7-97b0-849de375e4a6)
+
+[Screencast from 24-05-26 01:57:31 PM IST.webm](https://github.com/user-attachments/assets/d9dc089b-94a3-466b-bda7-08be08d63e83)
+
 
 
 
